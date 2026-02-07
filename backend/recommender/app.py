@@ -1,47 +1,54 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import pickle
 import numpy as np
-import pandas as pd
 import os
 
+# -----------------------------
+# App setup
+# -----------------------------
 app = Flask(__name__)
+CORS(app)
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # -----------------------------
-# Load artifacts
+# Load artifacts safely
 # -----------------------------
-model = pickle.load(open("model.pkl", "rb"))
-book_pivot = pickle.load(open("book_pivot.pkl", "rb"))
-book_names = pickle.load(open("book_names.pkl", "rb"))
-final_rating = pickle.load(open("final_rating.pkl", "rb"))
-
-print("FINAL_RATING COLUMNS:")
-print(list(final_rating.columns))
+model = pickle.load(open(os.path.join(BASE_DIR, "model.pkl"), "rb"))
+book_pivot = pickle.load(open(os.path.join(BASE_DIR, "book_pivot.pkl"), "rb"))
+final_rating = pickle.load(open(os.path.join(BASE_DIR, "final_rating.pkl"), "rb"))
 
 # -----------------------------
-# Debug titles
+# Health check (IMPORTANT for Railway)
 # -----------------------------
-print("===== SAMPLE BOOK TITLES (first 20) =====")
-for title in book_pivot.index[:20]:
-    print(repr(title))
-print("========================================")
+@app.route("/", methods=["GET"])
+def health():
+    return jsonify({"status": "BookMind backend running"}), 200
 
 # -----------------------------
 # Recommendation endpoint
 # -----------------------------
-@app.route("/recommend", methods=["GET"])
+@app.route("/recommend", methods=["POST"])
 def recommend():
-    book_name = request.args.get("book")
+    data = request.get_json()
+    book_name = data.get("bookName")
 
     if not book_name:
-        return jsonify({"error": "Missing 'book' query parameter"}), 400
+        return jsonify({"error": "bookName is required"}), 400
 
+    # Case-insensitive partial match
     matches = [
-        t for t in book_pivot.index
-        if book_name.lower() in t.lower()
+        title for title in book_pivot.index
+        if book_name.lower() in title.lower()
     ]
 
     if not matches:
-        return jsonify({"error": "Book not found"}), 404
+        return jsonify({
+            "query": book_name,
+            "matched": None,
+            "recommended_books": []
+        }), 200
 
     matched_title = matches[0]
     book_id = np.where(book_pivot.index == matched_title)[0][0]
@@ -51,34 +58,32 @@ def recommend():
         n_neighbors=min(6, len(book_pivot))
     )
 
-    recommendations = []
+    recommended_books = []
 
     for i in indices[0][1:]:
         title = book_pivot.index[i]
 
-        book_rows = final_rating[final_rating["title"] == title]
-        if book_rows.empty:
+        row = final_rating[final_rating["title"] == title]
+        if row.empty:
             continue
 
-        book_info = book_rows.iloc[0]
+        book = row.iloc[0]
 
-        recommendations.append({
-            "title": book_info["title"],
-            "author": book_info["author"],
-            "image": book_info["image_url"]
+        recommended_books.append({
+            "title": book["title"],
+            "author": book["author"],
+            "image": book["image_url"]
         })
 
     return jsonify({
         "query": book_name,
         "matched": matched_title,
-        "recommendations": recommendations
+        "recommended_books": recommended_books
     })
-
-
 
 # -----------------------------
 # App entry
 # -----------------------------
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5002))
+    port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)

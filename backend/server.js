@@ -1,21 +1,32 @@
-import express, { json } from "express";
+import express from "express";
 import axios from "axios";
 import cors from "cors";
 import dotenv from "dotenv";
 
-const app = express();
-const PORT = process.env.PORT || 5001;
-
-app.use(cors());
-app.use((req, res, next) => {
-  console.log(`Incoming request: ${req.method} ${req.url}`);
-  next();
-});
-app.use(json());
-
+// Load env vars FIRST
 dotenv.config();
 
-// Define mappings for genres and emotions
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+// ===== Middleware =====
+app.use(cors());
+app.use(express.json());
+
+app.use((req, res, next) => {
+  console.log(`➡️ ${req.method} ${req.url}`);
+  next();
+});
+
+// ===== ENV CHECK =====
+const ML_RECOMMENDER_URL = process.env.ML_RECOMMENDER_URL;
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
+
+if (!ML_RECOMMENDER_URL) {
+  console.error("❌ ML_RECOMMENDER_URL is missing in env variables");
+}
+
+// ===== Predefined mappings =====
 const predefinedCategories = {
   genres: {
     adventure: "adventure",
@@ -34,43 +45,73 @@ const predefinedCategories = {
   },
 };
 
-// Route to handle book search queries
+// ===== ROUTES =====
+
+// Health check (IMPORTANT for Railway)
+app.get("/", (req, res) => {
+  res.json({ status: "Backend running ✅" });
+});
+
+// 🔥 ML Recommendation Route
+app.get("/api/recommend", async (req, res) => {
+  const { book } = req.query;
+
+  if (!book) {
+    return res.status(400).json({ error: "Book name is required" });
+  }
+
+  try {
+    const response = await axios.get(ML_RECOMMENDER_URL, {
+      params: { book },
+    });
+
+    res.json(response.data);
+  } catch (error) {
+    console.error("❌ ML Service Error:", error.message);
+    res.status(500).json({ error: "Failed to get recommendations" });
+  }
+});
+
+// 📚 Google Books Search Route
 app.get("/api/books", async (req, res) => {
-  const { query, type } = req.query; // Query and type (genre, emotion, name, or author)
-  const API_KEY = process.env.GOOGLE_API_KEY; // Google Books API key
+  const { query, type } = req.query;
+
+  if (!query) {
+    return res.status(400).json({ error: "Query is required" });
+  }
 
   let searchTerm = query;
 
-  // Map query to predefined categories if type is provided
   if (type === "genre") {
     searchTerm = predefinedCategories.genres[query.toLowerCase()] || query;
   } else if (type === "emotion") {
     searchTerm = predefinedCategories.emotions[query.toLowerCase()] || query;
   } else if (type === "author") {
-    // Search by author
     searchTerm = `inauthor:${query}`;
   } else if (type === "name") {
-    // Search by book title
     searchTerm = `intitle:${query}`;
   }
 
   try {
     const response = await axios.get(
-      `https://www.googleapis.com/books/v1/volumes?q=${searchTerm}&key=${API_KEY}`,
+      `https://www.googleapis.com/books/v1/volumes`,
+      {
+        params: {
+          q: searchTerm,
+          key: GOOGLE_API_KEY,
+          maxResults: 20,
+        },
+      },
     );
-    res.status(200).json(response.data); // Send response to the frontend
+
+    res.json(response.data);
   } catch (error) {
-    console.error(
-      "Error fetching data from Google Books API:",
-      error.response ? error.response.data : error.message,
-    );
-    res
-      .status(500)
-      .json({ error: "Failed to fetch data from Google Books API" });
+    console.error("❌ Google Books API Error:", error.message);
+    res.status(500).json({ error: "Failed to fetch books" });
   }
 });
 
-// Start the server
+// ===== START SERVER =====
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:5173`);
+  console.log(`🚀 Backend running on port ${PORT}`);
 });
