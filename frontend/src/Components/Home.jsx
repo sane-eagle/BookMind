@@ -44,7 +44,7 @@ const Home = forwardRef((props, ref) => {
   /* ---------------- EXISTING search (GENRES / EMOTIONS) ---------------- */
   const handleSearch = async (query, type) => {
     setIsLoading(true)
-    const url = `https://bookified-backend.onrender.com/api/books?query=${query}&type=${type}`
+    const url = `https://bookmind-backend.onrender.com/api/books?query=${query}&type=${type}`
 
     try {
       const response = await axios.get(url)
