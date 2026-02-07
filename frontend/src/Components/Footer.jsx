@@ -48,27 +48,9 @@ const Footer = () => {
             <nav className="footer__nav">
               <ul className="footer__nav-list">
                 <li className="footer__nav-item">
-                  <a href="https://www.youtube.com/@superbro1476" className="footer__nav-link">
-                    <i data-feather="youtube"></i>
-                    <span>Youtube</span>
-                  </a>
-                </li>
-                {/* <li className="footer__nav-item">
-              <a href="./Social.jsx" className="footer__nav-link">
-                <i data-feather="instagram"></i><span>Instagram</span>
-                
-              </a>
-            </li> */}
-                <li className="footer__nav-item">
-                  <a href="https://www.linkedin.com/in/rushikesh-sapkal007/" className="footer__nav-link">
+                  <a href="https://www.linkedin.com/in/yash-sawant-08b6872a2/" className="footer__nav-link">
                     <i data-feather="linkedin"></i>
                     <span>LinkedIn</span>
-                  </a>
-                </li>
-                <li className="footer__nav-item">
-                  <a href="https://x.com/Rushikesh_S_69" className="footer__nav-link">
-                    <i data-feather="twitter"></i>
-                    <span>Twitter</span>
                   </a>
                 </li>
               </ul>
@@ -81,8 +63,9 @@ const Footer = () => {
             <nav className="footer__nav">
               <ul className="footer__nav-list">
                 <li className="footer__nav-item">
-                  <a href="https://g.co/kgs/2Xdf2zd" className="footer__nav-link">
-                    rushikeshsapkal930@gmail.com
+                  <a href="mailto:?cc=yashsawant868@gmail.com
+" className="footer__nav-link">
+                    yashsawant868@gmail.com
                   </a>
                 </li>
               </ul>
@@ -92,7 +75,7 @@ const Footer = () => {
         <div className="footer__copyrights">
           <p>
             Want to know more about me?{" "}
-            <a href="https://rushikesh-sapkal-portfolio.vercel.app" target="_blank" rel="noreferrer">
+            <a href="https://github.com/sane-eagle" target="_blank" rel="noreferrer">
               Check me out!
             </a>
           </p>

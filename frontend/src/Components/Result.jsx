@@ -5,24 +5,53 @@ const Result = ({ books = [], searchCategory }) => {
     <div className="result-container">
       {books.length > 0 && (
         <>
-          <h2>Results for "{searchCategory.charAt(0).toUpperCase() + searchCategory.slice(1)}":</h2>
+          <h2>
+            Results for "
+            {searchCategory
+              ? searchCategory.charAt(0).toUpperCase() +
+                searchCategory.slice(1)
+              : "Search"}
+            ":
+          </h2>
+
           <div className="result-grid">
-            {books.map((book) => (
-              <div className="result-item" key={book.id}>
-                <h3>{book.volumeInfo.title}</h3>
-                <div className="image-container">
-                  <img
-                    src={book.volumeInfo.imageLinks?.thumbnail || "/placeholder.svg?height=200&width=150"}
-                    alt={book.volumeInfo.title}
-                    onError={(e) => {
-                      e.target.onerror = null
-                      e.target.src = "/placeholder.svg?height=200&width=150"
-                    }}
-                  />
+            {books.map((book, index) => {
+              // 🔒 DEFENSIVE READ (NO STRUCTURE CHANGE)
+              const volumeInfo = book.volumeInfo || book
+
+              const title =
+                volumeInfo.title || "Unknown Title"
+
+              const image =
+                volumeInfo.imageLinks?.thumbnail ||
+                volumeInfo.image ||
+                "/placeholder.svg?height=200&width=150"
+
+              const authors =
+                volumeInfo.authors?.join(", ") ||
+                volumeInfo.author ||
+                "Unknown Author"
+
+              return (
+                <div className="result-item" key={book.id || index}>
+                  <h3>{title}</h3>
+
+                  <div className="image-container">
+                    <img
+                      src={image}
+                      alt={title}
+                      onError={(e) => {
+                        e.target.onerror = null
+                        e.target.src =
+                          "/placeholder.svg?height=200&width=150"
+                      }}
+                    />
+                  </div>
+
+                  <p>{authors}</p>
                 </div>
-                <p>{book.volumeInfo.authors?.join(", ") || "Unknown Author"}</p>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </>
       )}
@@ -31,4 +60,3 @@ const Result = ({ books = [], searchCategory }) => {
 }
 
 export default Result
-
