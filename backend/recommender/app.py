@@ -43,6 +43,7 @@ def recommend():
         if book_name.lower() in title.lower()
     ]
 
+    # IMPORTANT: return empty list, NOT 404
     if not matches:
         return jsonify({
             "query": book_name,
@@ -69,17 +70,16 @@ def recommend():
 
         book = row.iloc[0]
 
+        # RETURN ONLY TITLE (frontend handles Google Books)
         recommended_books.append({
-            "title": book["title"],
-            "author": book["author"],
-            "image": book["image_url"]
+            "title": book["title"]
         })
 
     return jsonify({
         "query": book_name,
         "matched": matched_title,
         "recommended_books": recommended_books
-    })
+    }), 200
 
 # -----------------------------
 # App entry
