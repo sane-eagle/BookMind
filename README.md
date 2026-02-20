@@ -190,7 +190,8 @@ If you like **BookMind**:
 * 🧠 **Improve the model**
 * 🎨 **Enhance the UI**
 
---
+---
 
 **Made with ❤️ by Yash Sawant**
+
 
